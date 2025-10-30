@@ -289,14 +289,6 @@ Gunakan format seperti **Twitter Advanced Search**:
             
             await message.channel.send(embed=results_embed)
             
-            # Send detailed report
-            if len(report) < 2000:
-                await message.channel.send(f"**📋 Laporan Detail:**\n{report}")
-            else:
-                # If report is too long, send a shortened version
-                shortened_report = report[:1997] + "..."
-                await message.channel.send(f"**📋 Laporan Detail:**\n{shortened_report}")
-            
             logger.info(f"Successfully completed analysis for user {message.author.name}: {validated_query}")
             
         except Exception as e:

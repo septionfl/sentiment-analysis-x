@@ -2,6 +2,8 @@ import nltk
 import logging
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import pandas as pd
+from collections import Counter
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -49,21 +51,75 @@ class SentimentAnalyzer:
         top_negative = negative_df.sort_values(by='reply_count', ascending=False).head(top_n)
         return top_negative
     
-    def generate_sentiment_report(self, df):
-        """Generate comprehensive sentiment report for Discord"""
-        sentiment_counts, majority_sentiment = self.get_sentiment_summary(df)
-        top_negative_tweets = self.get_top_negative_tweets(df)
+    def get_sentiment_insights(self, df):
+        """Generate detailed insights for each sentiment category"""
+        insights = {
+            'positive': {'tweets': [], 'common_words': [], 'avg_engagement': 0},
+            'negative': {'tweets': [], 'common_words': [], 'avg_engagement': 0},
+            'neutral': {'tweets': [], 'common_words': [], 'avg_engagement': 0}
+        }
         
-        report += f"**📊 Overall Sentiment Distribution:**\n"
+        # Analyze each sentiment category
+        for sentiment in ['positive', 'negative', 'neutral']:
+            sentiment_df = df[df['sentiment'] == sentiment].copy()
+            
+            if not sentiment_df.empty:
+                # Get sample tweets (up to 3)
+                insights[sentiment]['tweets'] = sentiment_df.nlargest(3, 'reply_count')[['full_text', 'reply_count']].to_dict('records')
+                
+                # Get common words
+                all_text = ' '.join(sentiment_df['full_text'].astype(str)).lower()
+                words = re.findall(r'\b\w+\b', all_text)
+                # Filter out common stop words and short words
+                stop_words = {'yang', 'di', 'dan', 'itu', 'dengan', 'untuk', 'dari', 'ini', 'pada', 'tidak', 'akan', 'saya', 'kita', 'ke', 'dalam', 'ada', 'atau', 'juga', 'the', 'and', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'as', 'by', 'is', 'are', 'was', 'were', 'be', 'this', 'that', 'it', 'he', 'she', 'they', 'we', 'you', 'i', 'me', 'him', 'her', 'them', 'us', 'my', 'your', 'his', 'her', 'its', 'our', 'their'}
+                filtered_words = [word for word in words if word not in stop_words and len(word) > 2]
+                common_words = Counter(filtered_words).most_common(5)
+                insights[sentiment]['common_words'] = [word for word, count in common_words]
+                
+                # Calculate average engagement
+                insights[sentiment]['avg_engagement'] = sentiment_df['reply_count'].mean()
+        
+        return insights
+    
+    def generate_sentiment_report(self, df):
+        """Generate comprehensive sentiment report"""
+        sentiment_counts, majority_sentiment = self.get_sentiment_summary(df)
+        insights = self.get_sentiment_insights(df)
+        
+        report = f"**📊 Sentiment Analysis Report**\n\n"
+        report += f"**Overall Sentiment Distribution:**\n"
         report += f"✅ Positive: {sentiment_counts.get('positive', 0)}\n"
         report += f"❌ Negative: {sentiment_counts.get('negative', 0)}\n"
         report += f"⚪ Neutral: {sentiment_counts.get('neutral', 0)}\n\n"
         report += f"**🎯 Majority Sentiment:** {majority_sentiment.capitalize()}\n\n"
         
-        if not top_negative_tweets.empty:
-            report += "**🔻 Top 5 Negative Tweets (by replies):**\n"
-            for index, row in top_negative_tweets.iterrows():
-                tweet_text = row['full_text'][:100] + "..." if len(row['full_text']) > 100 else row['full_text']
-                report += f"📊 {row['reply_count']} replies: {tweet_text}\n\n"
+        # Add insights for each sentiment
+        report += "**🔍 Detailed Insights:**\n\n"
+        
+        # Positive insights
+        report += "✅ **Positive Sentiment Insights:**\n"
+        if insights['positive']['common_words']:
+            report += f"• Top keywords: {', '.join(insights['positive']['common_words'])}\n"
+            report += f"• Avg engagement: {insights['positive']['avg_engagement']:.1f} replies/tweet\n"
+        else:
+            report += "• No significant positive tweets found\n"
+        report += "\n"
+        
+        # Negative insights
+        report += "❌ **Negative Sentiment Insights:**\n"
+        if insights['negative']['common_words']:
+            report += f"• Top keywords: {', '.join(insights['negative']['common_words'])}\n"
+            report += f"• Avg engagement: {insights['negative']['avg_engagement']:.1f} replies/tweet\n"
+        else:
+            report += "• No significant negative tweets found\n"
+        report += "\n"
+        
+        # Neutral insights
+        report += "⚪ **Neutral Sentiment Insights:**\n"
+        if insights['neutral']['common_words']:
+            report += f"• Top keywords: {', '.join(insights['neutral']['common_words'])}\n"
+            report += f"• Avg engagement: {insights['neutral']['avg_engagement']:.1f} replies/tweet\n"
+        else:
+            report += "• No significant neutral tweets found\n"
         
         return report

@@ -1,6 +1,6 @@
 # Agent Development: SentimentX Agent
 
-Discord bot untuk analisis sentimen tweet (Bahasa Indonesia) dengan crawling real-time dan laporan otomatis.
+Discord bot untuk analisis sentimen tweet (Bahasa Indonesia) dengan crawling real-time dan laporan otomatis
 
 ## 🚀 FEATURE
 - Crawling Twitter (advanced search)
@@ -42,6 +42,6 @@ LOG_LEVEL=INFO
 ```
 
 3. Running:
-''' bash
+```bash
 python main.py bot
-'''
+```

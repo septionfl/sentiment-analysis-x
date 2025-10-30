@@ -11,7 +11,6 @@ Discord bot untuk analisis sentimen tweet (Bahasa Indonesia) dengan crawling rea
 
 ## 🛠️ REQUIREMENTS
 - Python 3.8+
-- Node.js 16+ (jika ada komponen frontend/integrasi Node)
 - Discord Bot Token / Webhook URL
 - Twitter Auth Token
 

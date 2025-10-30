@@ -177,6 +177,11 @@ Gunakan format seperti **Twitter Advanced Search**:
             await message.channel.send(f"❌ **Error Validasi Query:** {error_msg}")
             return
         
+        # Initialize variables to avoid reference errors
+        status_message = None
+        df = pd.DataFrame()
+        report = "Laporan tidak tersedia karena terjadi error selama proses analisis."
+        
         try:
             # Send initial response
             initial_embed = discord.Embed(
@@ -217,9 +222,15 @@ Gunakan format seperti **Twitter Advanced Search**:
             
             # Step 5: Generate results
             await self.update_status(status_message, "📈 Menyusun laporan...", 0.9)
-            report = analyzer.generate_sentiment_report(df)
             
-            # Save results locally (optional)
+            # Generate report with error handling
+            try:
+                report = analyzer.generate_sentiment_report(df)
+            except Exception as report_error:
+                logger.error(f"Error generating report: {report_error}")
+                report = f"❌ Error saat menghasilkan laporan detail: {str(report_error)}"
+            
+            # Save results locally
             visualizer = ResultVisualizer()
             safe_query_name = "".join(x for x in validated_query[:30] if x.isalnum() or x in (' ', '-', '_')).rstrip()
             output_filename = f"results/sentiment_{safe_query_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
@@ -228,7 +239,7 @@ Gunakan format seperti **Twitter Advanced Search**:
             # Send completion status
             await self.update_status(status_message, "✅ Analisis selesai!", 1.0, True)
             
-            # Send results
+            # Send results embed
             results_embed = discord.Embed(
                 title="📊 Hasil Analisis Sentimen",
                 description=f"**Query:** `{validated_query}`",
@@ -264,9 +275,13 @@ Gunakan format seperti **Twitter Advanced Search**:
                     tweet_preview = row['full_text'][:80] + "..." if len(row['full_text']) > 80 else row['full_text']
                     negative_text += f"{i}. ({row['reply_count']} replies) {tweet_preview}\n"
                 
+                # Ensure we don't exceed Discord's field value limit
+                if len(negative_text) > 1024:
+                    negative_text = negative_text[:1021] + "..."
+                
                 results_embed.add_field(
                     name="🔻 Top Negative Tweets",
-                    value=negative_text[:1024],  # Discord field value limit
+                    value=negative_text,
                     inline=False
                 )
             
@@ -277,12 +292,27 @@ Gunakan format seperti **Twitter Advanced Search**:
             # Send detailed report
             if len(report) < 2000:
                 await message.channel.send(f"**📋 Laporan Detail:**\n{report}")
+            else:
+                # If report is too long, send a shortened version
+                shortened_report = report[:1997] + "..."
+                await message.channel.send(f"**📋 Laporan Detail:**\n{shortened_report}")
             
             logger.info(f"Successfully completed analysis for user {message.author.name}: {validated_query}")
             
         except Exception as e:
             logger.error(f"Error processing sentiment analysis for {message.author.name}: {str(e)}")
-            await message.channel.send(f"❌ **Terjadi error selama proses analisis:**\n```{str(e)}```")
+            
+            # Create error message
+            error_message = f"❌ **Error selama analisis sentimen**\n\n**Query:** `{validated_query}`\n\n**Error:** ```{str(e)}```\n\nSilakan coba lagi dengan query yang berbeda atau hubungi administrator."
+            
+            # Try to update status message if it exists
+            if status_message:
+                try:
+                    await self.update_status(status_message, f"❌ Error: {str(e)[:50]}...", 1.0, False)
+                except Exception as update_error:
+                    logger.error(f"Error updating status: {update_error}")
+            
+            await message.channel.send(error_message)
     
     async def update_status(self, message, status, progress, success=None):
         """Update the status message with progress"""

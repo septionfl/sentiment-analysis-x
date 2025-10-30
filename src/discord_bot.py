@@ -66,7 +66,7 @@ class XSentimentBot:
     def get_help_text(self):
         """Generate help text for users"""
         return """
-**🤖 X Sentiment Analysis Bot - Panduan Penggunaan**
+**X Sentiment Analysis Bot - Panduan Penggunaan**
 
 **Perintah Utama:**
 `@XS [query_pencarian]` - Analisis sentimen tweet berdasarkan query pencarian
@@ -92,8 +92,6 @@ Gunakan format seperti **Twitter Advanced Search**:
 - `#hashtag` - Pencarian hashtag
 - `"phrase"` - Pencarian frase exact
 - `-keyword` - Mengecualikan keyword
-- `?` - Tweet dengan pertanyaan
-- `filter:replies` atau `-filter:replies` - Filter replies
 
 **Contoh Penggunaan:**
 `@XS #pemilu2024 since:2024-01-01 until:2024-02-14 lang:id`
@@ -105,7 +103,7 @@ Gunakan format seperti **Twitter Advanced Search**:
     def get_examples_text(self):
         """Generate examples text for users"""
         return """
-**📚 Contoh Query Pencarian yang Bisa Dicoba:**
+**Contoh Query Pencarian yang Bisa Dicoba:**
 
 1. **Trending Topic dengan Rentang Waktu**
    `@XS #pemilu2024 since:2024-02-01 until:2024-02-14 lang:id`
@@ -121,31 +119,25 @@ Gunakan format seperti **Twitter Advanced Search**:
 
 5. **Kombinasi Kompleks**
    `@XS #teknologi from:startupdailyid since:2024-01-01 until:2024-02-14 -ai -robot`
-
-6. **Tweet dengan Pertanyaan**
-   `@XS "bagaimana cara" ? since:2024-01-01 lang:id`
-
-7. **Tanpa Replies**
-   `@XS #JavaScript -filter:replies since:2024-01-01 lang:id`
         """
     
     def get_status_text(self):
         """Generate status text for the bot"""
         active_searches_count = len(self.active_searches)
         return f"""
-**🔧 Status Bot**
+**Status Bot**
 - **Bot Name:** X Sentiment Analysis
 - **Active Searches:** {active_searches_count}
-- **Status:** ✅ Online
+- **Status:** Online
 - **Usage:** Gunakan `@XS [query]` untuk menganalisis sentimen tweet
 
-**📊 Fitur:**
-✅ Crawling tweet real-time
-✅ Preprocessing & pembersihan data
-✅ Normalisasi bahasa slang Indonesia
-✅ Terjemahan ke bahasa Inggris
-✅ Analisis sentimen dengan VADER
-✅ Laporan otomatis ke Discord
+**Fitur:**
+Crawling tweet real-time
+Preprocessing & pembersihan data
+Normalisasi bahasa slang Indonesia
+Terjemahan ke bahasa Inggris
+Analisis sentimen dengan VADER
+Laporan otomatis ke Discord
         """
     
     def setup_handlers(self):
@@ -154,8 +146,8 @@ Gunakan format seperti **Twitter Advanced Search**:
         @self.client.event
         async def on_ready():
             """Called when the bot is ready"""
-            logger.info(f'Bot terhubung sebagai {self.client.user} (ID: {self.client.user.id})')
-            print(f'✅ Bot logged in as {self.client.user}')
+            logger.info('Bot terhubung sebagai %s (ID: %s)', self.client.user, self.client.user.id)
+            print('Bot logged in as', self.client.user)
             
             # Set bot presence
             await self.client.change_presence(
@@ -189,7 +181,7 @@ Gunakan format seperti **Twitter Advanced Search**:
             
             # Handle hello command
             elif message.content.startswith('!hello') or message.content.startswith('!halo'):
-                await message.channel.send(f'👋 Halo {message.author.mention}! Saya adalah X Sentiment Analysis Bot. Gunakan `@XS [query]` untuk menganalisis sentimen tweet atau `!help` untuk bantuan.')
+                await message.channel.send('Halo {0.mention}! Saya adalah X Sentiment Analysis Bot. Gunakan `@XS [query]` untuk menganalisis sentimen tweet atau `!help` untuk bantuan.'.format(message.author))
     
     async def handle_sentiment_analysis(self, message):
         """Handle sentiment analysis requests"""
@@ -197,14 +189,14 @@ Gunakan format seperti **Twitter Advanced Search**:
         
         # Check if query is empty
         if not search_query:
-            await message.channel.send("❌ **Kesalahan Format**\n" + self.get_help_text())
+            await message.channel.send("Kesalahan Format\n" + self.get_help_text())
             return
         
         # Validate the search query
         validated_query, error_msg = self.parse_search_query(search_query)
         
         if error_msg:
-            await message.channel.send(f"❌ **Error Validasi Query:** {error_msg}")
+            await message.channel.send("Error Validasi Query: " + error_msg)
             return
         
         # Track active search
@@ -215,20 +207,25 @@ Gunakan format seperti **Twitter Advanced Search**:
             'start_time': datetime.now()
         }
         
+        # Initialize ALL variables at the start to avoid scope issues
+        status_message = None
+        df = None
+        report = "Laporan tidak tersedia"  # Initialize with default value
+        
         try:
             # Send initial response
             initial_embed = discord.Embed(
-                title="🔍 Memulai Analisis Sentimen",
-                description=f"**Query:** `{validated_query}`",
+                title="Memulai Analisis Sentimen",
+                description="**Query:** `" + validated_query + "`",
                 color=0x00ff00
             )
-            initial_embed.add_field(name="Status", value="⏳ Memulai proses...", inline=False)
+            initial_embed.add_field(name="Status", value="Memulai proses...", inline=False)
             initial_embed.set_footer(text="Proses mungkin memakan waktu beberapa menit")
             
             status_message = await message.channel.send(embed=initial_embed)
             
             # Step 1: Crawling tweets
-            await self.update_status(status_message, "📥 Mengambil tweet...", 0.2)
+            await self.update_status(status_message, "Mengambil tweet...", 0.2)
             filename = self.generate_filename(validated_query)
             
             df = await asyncio.get_event_loop().run_in_executor(
@@ -236,41 +233,89 @@ Gunakan format seperti **Twitter Advanced Search**:
             )
             
             if df.empty:
-                await self.update_status(status_message, "❌ Tidak ada tweet ditemukan", 1.0, False)
-                await message.channel.send(f"❌ **Tidak ada tweet yang ditemukan untuk query:** `{validated_query}`\nCoba ubah kata kunci atau rentang waktu.")
+                await self.update_status(status_message, "Tidak ada tweet ditemukan", 1.0, False)
+                
+                # Provide helpful suggestions
+                suggestions = self.get_crawl_suggestions(validated_query)
+                error_embed = discord.Embed(
+                    title="Tidak Ada Tweet Ditemukan",
+                    description="**Query:** `" + validated_query + "`",
+                    color=0xff0000
+                )
+                error_embed.add_field(
+                    name="Kemungkinan Penyebab", 
+                    value=suggestions,
+                    inline=False
+                )
+                error_embed.add_field(
+                    name="Coba Query Ini",
+                    value="`@XS #pemilu2024`\n`@XS from:tanyakanrl`\n`@XS belajar coding`",
+                    inline=False
+                )
+                
+                await message.channel.send(embed=error_embed)
                 return
             
             # Step 2: Preprocessing
-            await self.update_status(status_message, "🔄 Memproses data...", 0.4)
+            await self.update_status(status_message, "Memproses data...", 0.4)
             df = await asyncio.get_event_loop().run_in_executor(None, preprocess_data, df)
             
             # Step 3: Translation
-            await self.update_status(status_message, "🌐 Menerjemahkan teks...", 0.6)
+            await self.update_status(status_message, "Menerjemahkan teks...", 0.6)
             translator = TextTranslator()
             df = await asyncio.get_event_loop().run_in_executor(None, translator.process_translation, df)
             
             # Step 4: Sentiment Analysis
-            await self.update_status(status_message, "📊 Menganalisis sentimen...", 0.8)
+            await self.update_status(status_message, "Menganalisis sentimen...", 0.8)
             analyzer = SentimentAnalyzer()
             df = await asyncio.get_event_loop().run_in_executor(None, analyzer.analyze_sentiment, df)
             
-            # Step 5: Generate results
-            await self.update_status(status_message, "📈 Menyusun laporan...", 0.9)
+            # Step 5: Generate results - THIS MUST HAPPEN BEFORE ANY POTENTIAL ERRORS
+            await self.update_status(status_message, "Menyusun laporan...", 0.9)
+            
+            # Generate report - this should never fail if we have data
             report = analyzer.generate_sentiment_report(df)
             
             # Save results
             visualizer = ResultVisualizer()
             safe_query_name = "".join(x for x in validated_query[:30] if x.isalnum() or x in (' ', '-', '_')).rstrip()
-            output_filename = f"results/sentiment_{safe_query_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            output_filename = "results/sentiment_" + safe_query_name + "_" + datetime.now().strftime('%Y%m%d_%H%M%S') + ".csv"
             visualizer.save_results(df, output_filename)
             
             # Send completion status
-            await self.update_status(status_message, "✅ Analisis selesai!", 1.0, True)
+            await self.update_status(status_message, "Analisis selesai!", 1.0, True)
             
-            # Send results
+            # Send results using the report we generated
+            await self.send_results(message, validated_query, df, report, analyzer)
+            
+            logger.info("Successfully completed analysis for user %s: %s", message.author.name, validated_query)
+            
+        except Exception as e:
+            logger.error("Error processing sentiment analysis for %s: %s", message.author.name, str(e))
+            
+            # Use status_message if it's defined
+            if status_message:
+                await self.update_status(status_message, "Error: " + str(e), 1.0, False)
+            
+            error_message = "Terjadi error selama proses analisis:\n```" + str(e) + "```"
+            
+            # Truncate if too long
+            if len(error_message) > 2000:
+                error_message = error_message[:1997] + "```"
+                
+            await message.channel.send(error_message)
+        
+        finally:
+            # Clean up active search
+            if search_id in self.active_searches:
+                del self.active_searches[search_id]
+    
+    async def send_results(self, message, query, df, report, analyzer):
+        """Send analysis results to Discord channel"""
+        try:
             results_embed = discord.Embed(
-                title="📊 Hasil Analisis Sentimen",
-                description=f"**Query:** `{validated_query}`",
+                title="Hasil Analisis Sentimen",
+                description="**Query:** `" + query + "`",
                 color=0x0099ff,
                 timestamp=datetime.now()
             )
@@ -278,56 +323,83 @@ Gunakan format seperti **Twitter Advanced Search**:
             sentiment_counts, majority_sentiment = analyzer.get_sentiment_summary(df)
             
             results_embed.add_field(
-                name="📈 Distribusi Sentimen",
-                value=f"✅ **Positive:** {sentiment_counts.get('positive', 0)}\n❌ **Negative:** {sentiment_counts.get('negative', 0)}\n⚪ **Neutral:** {sentiment_counts.get('neutral', 0)}",
+                name="Distribusi Sentimen",
+                value="Positive: " + str(sentiment_counts.get('positive', 0)) + 
+                     "\nNegative: " + str(sentiment_counts.get('negative', 0)) + 
+                     "\nNeutral: " + str(sentiment_counts.get('neutral', 0)),
                 inline=True
             )
             
             results_embed.add_field(
-                name="🎯 Sentimen Mayoritas",
-                value=f"**{majority_sentiment.capitalize()}**",
+                name="Sentimen Mayoritas",
+                value=majority_sentiment.capitalize(),
                 inline=True
             )
             
             results_embed.add_field(
-                name="📊 Total Tweet",
-                value=f"**{len(df)}** tweet dianalisis",
+                name="Total Tweet",
+                value=str(len(df)) + " tweet dianalisis",
                 inline=True
             )
             
             # Add top negative tweets if any
             top_negative = analyzer.get_top_negative_tweets(df)
-            if not top_negative.empty:
+            if not top_negative.empty and len(top_negative) > 0:
                 negative_text = ""
                 for i, (idx, row) in enumerate(top_negative.iterrows(), 1):
                     tweet_preview = row['full_text'][:80] + "..." if len(row['full_text']) > 80 else row['full_text']
-                    negative_text += f"{i}. ({row['reply_count']} replies) {tweet_preview}\n"
+                    negative_text += str(i) + ". (" + str(row['reply_count']) + " replies) " + tweet_preview + "\n"
+                
+                # Ensure we don't exceed Discord field limit
+                if len(negative_text) > 1024:
+                    negative_text = negative_text[:1021] + "..."
                 
                 results_embed.add_field(
-                    name="🔻 Top Negative Tweets",
-                    value=negative_text[:1024],  # Discord field value limit
+                    name="Top Negative Tweets",
+                    value=negative_text,
                     inline=False
                 )
             
-            results_embed.set_footer(text=f"Analisis untuk {message.author.display_name}")
+            results_embed.set_footer(text="Analisis untuk " + message.author.display_name)
             
             await message.channel.send(embed=results_embed)
             
             # Send detailed report if not too long
             if len(report) < 2000:
-                await message.channel.send(f"**📋 Laporan Detail:**\n{report}")
-            
-            logger.info(f"Successfully completed analysis for user {message.author.name}: {validated_query}")
-            
+                await message.channel.send("Laporan Detail:\n" + report)
+            else:
+                # Split long report
+                report_chunks = [report[i:i+1999] for i in range(0, len(report), 1999)]
+                for chunk in report_chunks[:3]:  # Limit to 3 chunks
+                    await message.channel.send(chunk)
+                    
         except Exception as e:
-            logger.error(f"Error processing sentiment analysis for {message.author.name}: {str(e)}")
-            await self.update_status(status_message, f"❌ Error: {str(e)}", 1.0, False)
-            await message.channel.send(f"❌ **Terjadi error selama proses analisis:**\n```{str(e)}```")
+            logger.error("Error sending results: %s", str(e))
+            await message.channel.send("Berhasil menganalisis tetapi ada error saat menampilkan hasil detail.")
+    
+    def get_crawl_suggestions(self, query):
+        """Provide helpful suggestions when no tweets are found"""
+        suggestions = []
         
-        finally:
-            # Clean up active search
-            if search_id in self.active_searches:
-                del self.active_searches[search_id]
+        if "since:" in query and "until:" in query:
+            suggestions.append("Rentang waktu mungkin terlalu spesifik")
+            suggestions.append("Coba rentang waktu yang lebih pendek")
+        
+        if "from:" in query:
+            suggestions.append("Username mungkin tidak ada atau salah")
+            suggestions.append("Coba tanpa filter `from:`")
+        
+        if "lang:id" in query:
+            suggestions.append("Coba tanpa filter bahasa terlebih dahulu")
+        
+        if not suggestions:
+            suggestions = [
+                "Kata kunci terlalu spesifik",
+                "Coba kata kunci yang lebih umum",
+                "Pastikan format query sudah benar"
+            ]
+        
+        return "\n".join(suggestions)
     
     async def update_status(self, message, status, progress, success=None):
         """Update the status message with progress"""
@@ -341,16 +413,16 @@ Gunakan format seperti **Twitter Advanced Search**:
             color = 0x00ff00 if success is True else 0xff0000 if success is False else 0xffff00
             
             embed = discord.Embed(
-                title="🔍 Analisis Sentimen dalam Progress",
-                description=f"**Status:** {status}",
+                title="Analisis Sentimen dalam Progress",
+                description="**Status:** " + status,
                 color=color
             )
-            embed.add_field(name="Progress", value=f"`[{progress_bar}] {int(progress*100)}%`", inline=False)
+            embed.add_field(name="Progress", value="[" + progress_bar + "] " + str(int(progress*100)) + "%", inline=False)
             
             await message.edit(embed=embed)
             
         except Exception as e:
-            logger.error(f"Error updating status: {e}")
+            logger.error("Error updating status: %s", str(e))
     
     def run(self):
         """Run the Discord bot"""
@@ -358,11 +430,11 @@ Gunakan format seperti **Twitter Advanced Search**:
             logger.info("Starting Discord bot...")
             self.client.run(self.token)
         except discord.errors.LoginFailure:
-            logger.error("❌ Login failed. Please check your Discord token in the .env file.")
-            print("❌ ERROR: Invalid Discord token. Please check your .env file.")
+            logger.error("Login failed. Please check your Discord token in the .env file.")
+            print("ERROR: Invalid Discord token. Please check your .env file.")
         except Exception as e:
-            logger.error(f"❌ Error running Discord bot: {e}")
-            print(f"❌ ERROR: {e}")
+            logger.error("Error running Discord bot: %s", str(e))
+            print("ERROR:", str(e))
 
 # For testing purposes
 if __name__ == "__main__":
@@ -380,7 +452,7 @@ if __name__ == "__main__":
     
     token = os.getenv('DISCORD_TOKEN')
     if not token:
-        print("❌ ERROR: DISCORD_TOKEN not found in environment variables")
+        print("ERROR: DISCORD_TOKEN not found in environment variables")
         exit(1)
     
     bot = XSentimentBot(token)

@@ -18,7 +18,7 @@ Discord bot untuk analisis sentimen tweet (Bahasa Indonesia) dengan crawling rea
 1. Clone repo:
 ```bash
 git clone https://github.com/septionfl/sentiment-analysis-x.git
-cd x-sentiment-analysis
+cd sentiment-analysis-x
 ```
 
 2. .env setup:

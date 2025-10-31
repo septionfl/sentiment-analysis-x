@@ -40,3 +40,8 @@ DEFAULT_SEARCH_QUERY=from:tanyakanrl lang:id until:2024-10-29 since:2024-10-01
 LOG_LEVEL=INFO
 
 ```
+
+3. Running:
+''' bash
+python main.py bot
+'''

@@ -14,6 +14,9 @@ Discord bot untuk analisis sentimen tweet (Bahasa Indonesia) dengan crawling rea
 - Discord Bot Token / Webhook URL
 - Twitter Auth Token
 
+## DISCORD BOT LINK
+Link: https://discord.com/oauth2/authorize?client_id=1433445597930586192&permissions=8&integration_type=0&scope=bot
+
 ## ⚙️ Setup (local)
 1. Clone repo:
 ```bash

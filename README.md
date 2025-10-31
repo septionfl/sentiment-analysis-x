@@ -1,4 +1,4 @@
-# X Sentiment Analysis Bot
+# Agent Development: SentimentX Agent
 
 Discord bot untuk analisis sentimen tweet (Bahasa Indonesia) dengan crawling real-time dan laporan otomatis.
 

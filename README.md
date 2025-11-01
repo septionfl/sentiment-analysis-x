@@ -81,8 +81,22 @@ pip install -r requirements.txt
 ```bash
 npm install -g tweet-harvest@2.6.1
 ```
+4. **Get API**
+### Twitter Auth Token Setup
+```bash
+1. Visit Twitter and log in
+2. Ctrl + Shift + I
+3. Find application -> cookies -> auth_token
+4. Use this as your TWITTER_AUTH_TOKEN
+```
+### GROQ API Setup
+```bash
+1. Sign up at GROQ
+2. Get your free API key
+3. Add to .env as GROQ_API_KEY
+```
 
-4. **Configure Environment**
+5. **Configure Environment**
 ```bash
 cp .env.example .env
 ```
@@ -95,7 +109,7 @@ DEFAULT_LIMIT=100
 LOG_LEVEL=INFO
 ```
 
-5. **Run the Bot**
+6. **Run the Bot**
 ```bash
 python main.py bot
 ```
@@ -173,17 +187,5 @@ sentiment-analysis-x/
 └── .env
 ```
 
-## ⚙️ Configuration
-### Twitter Auth Token Setup
-```bash
-1. Visit Twitter and log in
-2. Ctrl + Shift + I
-3. Find application -> cookies -> auth_token
-4. Use this as your TWITTER_AUTH_TOKEN
-```
-### GROQ API Setup
-```bash
-1. Sign up at GROQ
-2. Get your free API key
-3. Add to .env as GROQ_API_KEY
-```
+## 🎥 GIF
+![2025-10-3123-44-16online-video-cutter comonline-video-cutter com-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/5e54f807-c7f1-4686-844a-5b402383fc3e)

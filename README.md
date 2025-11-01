@@ -9,7 +9,7 @@
 
 **AI-powered sentiment analysis bot for Twitter/X with natural language understanding**
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Configuration](#-configuration) • [Examples](#-examples)
+[Features](#-features) • [Installation](#-installation) • [Usage](#-usage)
 
 </div>
 

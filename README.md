@@ -1,4 +1,4 @@
-# 🤖 X Sentiment Analysis AI
+# 🤖 SentimentX Bot
 
 <div align="center">
 

@@ -152,7 +152,7 @@ Very disappointed dengan pelayanan seperti ini."
 
 ## 🏗 Project Structure
 ```bash
-x-sentiment-analysis/
+sentiment-analysis-x/
 ├── src/
 │   ├── discord_bot.py
 │   ├── smart_crawler.py
@@ -163,10 +163,13 @@ x-sentiment-analysis/
 │   ├── translator.py
 │   ├── visualizer.py
 │   └── config.py
+├── tests/
+│   ├── test_sentiment_analysis.py
 ├── results/
 ├── tweets-data/
 ├── main.py
 ├── requirements.txt
+├── requirements-test.txt
 └── .env
 ```
 
